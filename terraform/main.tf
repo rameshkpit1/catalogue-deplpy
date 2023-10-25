@@ -1,15 +1,15 @@
 module "catalogue_instance" {
   source  = "terraform-aws-modules/ec2-instance/aws"
   ami = data.aws_ami.devops_ami.id
-  instance_type = "t3.medium"
+  instance_type = "t2.micro"
   vpc_security_group_ids = [data.aws_ssm_parameter.catalogue_sg_id.value]
   # it should be in Roboshop DB subnet
   subnet_id = element(split(",",data.aws_ssm_parameter.private_subnet_ids.value), 0)
-  iam_instance_profile = "catalogue_profile"
+  iam_instance_profile = "catalogue-profile-${var.env}"
   //user_data = file("catalogue.sh")
   tags = merge(
     {
-        Name = "Catalogue-DEV-AMI"
+        Name = "catalogue-${var.env}-ami"
     },
     var.common_tags
   )
@@ -40,7 +40,7 @@ resource "null_resource" "cluster" {
     # Bootstrap script called with private_ip of each node in the cluster
     inline = [
       "chmod +x /tmp/catalogue.sh",
-      "sudo sh /tmp/catalogue.sh ${var.app_version}"
+      "sudo sh /tmp/catalogue.sh ${var.app_version} ${var.env}"
     ]
   }
 }
@@ -128,7 +128,7 @@ resource "aws_autoscaling_group" "catalogue" {
 
   tag {
     key                 = "Name"
-    value               = "Catalogue"
+    value               = "catalogue-${var.env}-${local.current_time}"
     propagate_at_launch = true
   }
 

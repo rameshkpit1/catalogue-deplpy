@@ -16,7 +16,7 @@ variable "common_tags" {
 }
 
 variable "domain_name" {
-  default = "joindevops.online"
+  default = "anikacoffee.xyz"
 }
 
 variable "app_version" {
